@@ -2,10 +2,7 @@ package com.xing.utils.delaytask;
 
 
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -127,7 +124,7 @@ public class DelayTaskQueue {
         public void run() {
             int cursor = delayTaskQueue.currentCursor();
             delayTaskQueue.cursorForward();
-            executorService.submit(new OrderCancel(delayTaskQueue.slots[cursor]));
+            executorService.execute(new OrderCancel(delayTaskQueue.slots[cursor]));
         }
     }
 
@@ -144,15 +141,22 @@ public class DelayTaskQueue {
 
         @Override
         public void run() {
-            Set<Task> tasks = slot.getTimeoutTask();
-            if (tasks.isEmpty()) {
-                return;
+            try {
+                if (slot == null) {
+                    return;
+                }
+                Set<Task> tasks = slot.getTimeoutTask();
+                if (tasks.isEmpty()) {
+                    return;
+                }
+                tasks.forEach(task -> {
+                    //todo 订单取消
+                    Long orderId = task.getOrderId();
+                    System.out.println("订单id 【" + orderId + "】 超时取消");
+                });
+            }catch (Exception e) {
+                System.out.println(e.getMessage());
             }
-            tasks.forEach(task -> {
-                //todo 订单取消
-                Long orderId = task.getOrderId();
-                System.out.println("订单id 【" + orderId + "】 超时取消");
-            });
         }
     }
 
